@@ -63,8 +63,12 @@ class TestUtils(unittest.TestCase):
 
     def test_highest_base_score_with_an_unknown_cvssv3(self):
         score = utils.highest_base_score(self.vulns)
-        # TODO: This needs validation with users, it at least a CVSSv3 is None, then it returns 10
-        self.assertEqual(score, 10)
+        self.assertEqual(score, 7.1)
+
+    def test_highest_base_score_with_only_unknown_cvssv3(self):
+        vulns = [self.vulns[0], self.vulns[3]]
+        score = utils.highest_base_score(vulns)
+        self.assertIsNone(score)
 
     def test_highest_base_score(self):
         cvssv3_vulns = list(
@@ -147,3 +151,6 @@ class TestUtils(unittest.TestCase):
         score = 11.0
         expected_label = None
         self.assertEqual(utils.cvss3_score_to_label(score), expected_label)
+
+    def test_cvss3_score_to_label_unknown_score(self):
+        self.assertEqual(utils.cvss3_score_to_label(None), "unknown")

@@ -28,27 +28,14 @@ except ImportError:
 
 import httpx
 from safety.meta import get_meta_http_headers
-
-
-def highest_base_score(vulns: List[Dict[str, Any]]) -> float:
-    """
-    Calculates the highest CVSS base score from a list of vulnerabilities.
-
-    Args:
-        vulns (List[Dict[str, Any]]): The list of vulnerabilities.
-
-    Returns:
-        float: The highest CVSS base score.
-    """
-    highest_base_score = 0
-    for vuln in vulns:
-        if vuln["severity"] is not None:
-            highest_base_score = max(
-                highest_base_score,
-                (vuln["severity"].get("cvssv3", {}) or {}).get("base_score", 10),
-            )
-
-    return highest_base_score
+from safety.severity import (
+    UNKNOWN_SEVERITY,
+    all_severities_unknown,
+    cvss3_score_to_label,
+    cvssv3_base_score,
+    highest_base_score,
+    severity_meets_threshold,
+)
 
 
 def generate_branch_name(pkg: str, remediation: Dict[str, Any]) -> str:
@@ -326,28 +313,6 @@ def fetch_changelog(
                     changelog[version] = log
 
     return changelog
-
-
-def cvss3_score_to_label(score: float) -> Optional[str]:
-    """
-    Converts a CVSS v3 score to a severity label.
-
-    Args:
-        score (float): The CVSS v3 score.
-
-    Returns:
-        Optional[str]: The severity label.
-    """
-    if 0.1 <= score <= 3.9:
-        return "low"
-    elif 4.0 <= score <= 6.9:
-        return "medium"
-    elif 7.0 <= score <= 8.9:
-        return "high"
-    elif 9.0 <= score <= 10.0:
-        return "critical"
-
-    return None
 
 
 def require_files_report(func):

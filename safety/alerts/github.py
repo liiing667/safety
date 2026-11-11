@@ -146,44 +146,22 @@ def github_pr(obj: Any, repo: str, token: str, base_url: Optional[str]) -> None:
             ]
 
             # Skip if all vulnerabilities have unknown severity and the ignore flag is set
-            if ignore_cvss_unknown_severity and all(
-                x["severity"] is None for x in vulns
-            ):
+            if ignore_cvss_unknown_severity and utils.all_severities_unknown(vulns):
                 LOG.debug(
                     "All vulnerabilities have unknown severity, and ignore_cvss_unknown_severity is set."
                 )
                 continue
 
-            highest_base_score = 0
-            for vuln in vulns:
-                if vuln["severity"] is not None:
-                    highest_base_score = max(
-                        highest_base_score,
-                        (vuln["severity"].get("cvssv3", {}) or {}).get(
-                            "base_score", 10
-                        ),
-                    )
+            highest_base_score = utils.highest_base_score(vulns)
 
             # Skip if none of the vulnerabilities meet the severity threshold
-            if ignore_cvss_severity_below:
-                at_least_one_match = False
-                for vuln in vulns:
-                    # Consider a None severity as a match, since it's controlled by a different flag
-                    # If we can't find a base_score but we have severity data, assume it's critical for now.
-                    if (
-                        vuln["severity"] is None
-                        or (vuln["severity"].get("cvssv3", {}) or {}).get(
-                            "base_score", 10
-                        )
-                        >= ignore_cvss_severity_below
-                    ):
-                        at_least_one_match = True
-
-                if not at_least_one_match:
-                    LOG.debug(
-                        f"None of the vulnerabilities found have a score greater than or equal to the ignore_cvss_severity_below of {ignore_cvss_severity_below}"
-                    )
-                    continue
+            if ignore_cvss_severity_below and not utils.severity_meets_threshold(
+                vulns, ignore_cvss_severity_below
+            ):
+                LOG.debug(
+                    f"None of the vulnerabilities found have a score greater than or equal to the ignore_cvss_severity_below of {ignore_cvss_severity_below}"
+                )
+                continue
 
             for parsed_req in parsed_req_file.requirements:
                 specs = (
@@ -472,45 +450,22 @@ def github_issue(obj: Any, repo: str, token: str, base_url: Optional[str]) -> No
             ]
 
             # Skip if all vulnerabilities have unknown severity and the ignore flag is set
-            if ignore_cvss_unknown_severity and all(
-                x["severity"] is None for x in vulns
-            ):
+            if ignore_cvss_unknown_severity and utils.all_severities_unknown(vulns):
                 LOG.debug(
                     "All vulnerabilities have unknown severity, and ignore_cvss_unknown_severity is set."
                 )
                 continue
 
-            highest_base_score = 0
-            for vuln in vulns:
-                if vuln["severity"] is not None:
-                    highest_base_score = max(
-                        highest_base_score,
-                        (vuln["severity"].get("cvssv3", {}) or {}).get(
-                            "base_score", 10
-                        ),
-                    )
+            highest_base_score = utils.highest_base_score(vulns)
 
             # Skip if none of the vulnerabilities meet the severity threshold
-            if ignore_cvss_severity_below:
-                at_least_one_match = False
-                for vuln in vulns:
-                    # Consider a None severity as a match, since it's controlled by a different flag
-                    # If we can't find a base_score but we have severity data, assume it's critical for now.
-                    if (
-                        vuln["severity"] is None
-                        or (vuln["severity"].get("cvssv3", {}) or {}).get(
-                            "base_score", 10
-                        )
-                        >= ignore_cvss_severity_below
-                    ):
-                        at_least_one_match = True
-                        break
-
-                if not at_least_one_match:
-                    LOG.debug(
-                        f"None of the vulnerabilities found have a score greater than or equal to the ignore_cvss_severity_below of {ignore_cvss_severity_below}"
-                    )
-                    continue
+            if ignore_cvss_severity_below and not utils.severity_meets_threshold(
+                vulns, ignore_cvss_severity_below
+            ):
+                LOG.debug(
+                    f"None of the vulnerabilities found have a score greater than or equal to the ignore_cvss_severity_below of {ignore_cvss_severity_below}"
+                )
+                continue
 
             for parsed_req in parsed_req_file.requirements:
                 specs = (

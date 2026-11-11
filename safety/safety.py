@@ -67,6 +67,7 @@ from .output_utils import (
     is_using_api_key,
     get_specifier_range_info,
 )
+from .severity import cvssv3_base_score_from_data
 from .util import (
     build_remediation_info_url,
     pluralize,
@@ -605,11 +606,7 @@ def ignore_vuln_if_needed(
     severity = None
 
     if cve:
-        if cve.cvssv2 and cve.cvssv2.get("base_score", None):
-            severity = cve.cvssv2.get("base_score", None)
-
-        if cve.cvssv3 and cve.cvssv3.get("base_score", None):
-            severity = cve.cvssv3.get("base_score", None)
+        severity = cvssv3_base_score_from_data(cve.cvssv3)
 
     ignore_severity_below = float(
         ignore_severity_rules.get("ignore-cvss-severity-below", 0.0)
@@ -618,7 +615,7 @@ def ignore_vuln_if_needed(
         ignore_severity_rules.get("ignore-cvss-unknown-severity", False)
     )
 
-    if severity:
+    if severity is not None:
         if float(severity) < ignore_severity_below:
             reason = "Ignored by severity rule in policy file, {0} < {1}".format(
                 float(severity), ignore_severity_below
